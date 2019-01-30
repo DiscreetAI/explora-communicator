@@ -46,7 +46,7 @@ class Dataset(Resource):
         if uuid in datasets:
             return make_success_dict(datasets[uuid]) 
         else:
-            return make_failure_dict("Dataset {} doesn't exist.".format(uuid))
+            return make_failure_dict("Dataset with UUID {} doesn't exist.".format(uuid))
 
     def delete(self, uuid):
         """
@@ -59,7 +59,7 @@ class Dataset(Resource):
             del datasets[uuid]
             return make_success_dict()
         else:
-            return make_failure_dict("Dataset {} doesn't exist.".format(uuid))
+            return make_failure_dict("Dataset with UUID {} doesn't exist.".format(uuid))
         
 class DatasetList(Resource):
     """
@@ -75,7 +75,7 @@ class DatasetList(Resource):
         """
         args = request.json
         uuid = args['uuid']
-        stats = args['stats']
+        stats = args['dataset_stats']
         datasets[uuid] = stats
         return make_success_dict()
 
