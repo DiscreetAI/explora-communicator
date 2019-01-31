@@ -6,17 +6,29 @@ from flask_restful import reqparse, abort, Api, Resource
 application = Flask(__name__)
 api = Api(application)
 
-#Set up dataset dictionary, which maps uuids to training stats
-datasets = {}
+#Set up job dictionary, which has the following structure:
 
-def make_success_dict(stats=None):
+# jobs = {
+#     'job1' : {
+#         'dataset1': {
+#             'round_num': <round number>
+#             'dataset_stats': <dataset_stats>
+#         }
+#         ...
+#     }
+#     ...
+# }
+
+jobs = {}
+
+def make_success_dict(job_uuid=None):
     """
     Helper method to return successful query.
     """
-    if stats:
+    if job_uuid:
         return {
             'status': 'success',
-            'dataset_stats': stats
+            'job_dict': jobs[job_uuid]
         }
     else:
         return {
@@ -34,54 +46,72 @@ def make_failure_dict(error_message):
 
 class Dataset(Resource):
     """
-    Class associated with requests for a specific dataset. Includes getting 
-    training stats for dataset or clearing its stats from datasets dictionary.
+    Class associated with requests for a specific dataset.
     """
-    def get(self, uuid):
+    def post(self, job_uuid, dataset_uuid):
         """
-        Get training stats for dataset with given uuid from datasets dictionary.
+        """
+        try: 
+            assert 'round_num' in request.json, "round_num not found!"
+            assert 'dataset_stats' in request.json, "dataset_stats not found!"
+            if job_uuid not in jobs:
+                jobs[job_uuid] = {}
+            jobs[job_uuid][dataset_uuid] = request.json
+            return make_success_dict()
+        except Exception as e:
+            return make_failure_dict(str(e))
 
-        Return success status if dataset stats were found, failure otherwise.
+class Job(Resource):
+    """
+    Class associated with requests for a specific job. Includes getting 
+    data for dataset or clearing its data from jobs dictionary.
+    """
+    def get(self, job_uuid):
         """
-        if uuid in datasets:
-            return make_success_dict(datasets[uuid]) 
+        Get data for job with given job_uuid from jobs dictionary.
+
+        Return success status if job data were found, failure otherwise.
+        """
+        if job_uuid in jobs:
+            return make_success_dict(job_uuid) 
         else:
-            return make_failure_dict("Dataset with UUID {} doesn't exist.".format(uuid))
+            return make_failure_dict("Job with UUID {} doesn't exist.".format(job_uuid))
 
-    def delete(self, uuid):
+    def delete(self, job_uuid):
         """
         Clear training stats for dataset with given uuid from datasets
         dictionary.
 
         Return success status if dataset stats were deleted, failure otherwise.
         """
-        if uuid in datasets:
-            del datasets[uuid]
+        if job_uuid in jobs:
+            del jobs[job_uuid]
             return make_success_dict()
         else:
-            return make_failure_dict("Dataset with UUID {} doesn't exist.".format(uuid))
+            return make_failure_dict("Job with UUID {} doesn't exist.".format(job_uuid))
         
-class DatasetList(Resource):
+class JobsList(Resource):
     """
-    Class associated with requests for all dataset. Includes storing training 
-    stats for specific dataset or clearing all stats from datasets dictionary.
+    Class associated with requests for all jobs. Includes clearing all data 
+    from jobs dictionary.
     """
 
-    def post(self):
+    def delete(self):
         """
-        Store training stats for given uuid in datasets dictionary.
+        Clear the entire datasets dictionary.
 
-        Return success status assuming storage was successful.
+        Return success status assuming entries were deleted.
         """
-        args = request.json
-        uuid = args['uuid']
-        stats = args['dataset_stats']
-        datasets[uuid] = stats
-        return make_success_dict()
+        if jobs:
+            jobs.clear()
+            return make_success_dict()
+        else:
+            return make_failure_dict("Dictionary is already empty!")
 
 ## Setup the Api resource routing here
-api.add_resource(DatasetList, '/datasets')
-api.add_resource(Dataset, '/datasets/<uuid>')
+api.add_resource(JobsList, '/jobs')
+api.add_resource(Job, '/jobs/<job_uuid>')
+api.add_resource(Dataset, '/jobs/<job_uuid>/<dataset_uuid>')
 
 if __name__ == '__main__':
     application.run(debug=True)
