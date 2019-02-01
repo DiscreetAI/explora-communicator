@@ -50,6 +50,10 @@ class Dataset(Resource):
     """
     def post(self, job_uuid, dataset_uuid):
         """
+        Store stats for a specific dataset. 
+
+        request.json is the json argument of requests.post, which we implicitly
+        have access to.
         """
         try: 
             assert 'round_num' in request.json, "round_num not found!"

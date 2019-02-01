@@ -35,8 +35,12 @@ def base_url():
     return 'http://status-server.jn6tkty4uh.us-west-1.elasticbeanstalk.com/jobs'
 
 @pytest.fixture(scope='session')
-def good_job_url(base_url, good_job_uuid):
-    return base_url + '/' + good_job_uuid
+def job_url_format(base_url):
+    return base_url + "/{job_uuid}"
+
+@pytest.fixture(scope='session')
+def good_job_url(job_url_format, good_job_uuid):
+    return job_url_format.format(job_uuid=good_job_uuid)
 
 @pytest.fixture(scope='session')
 def good_dataset_url(good_job_url, good_dataset_uuid):
@@ -118,9 +122,10 @@ def test_bad_get_and_bad_delete(bad_job_uuid, bad_job_url):
         "Error message was not correct!"
 
 def test_mass_post_and_delete(good_job_uuid, good_post_data, headers, \
-    good_job_url, good_dataset_uuid, base_url):
+    job_url_format, good_dataset_uuid, base_url):
     for i in range(1,6):
-        new_url = good_job_url + str(i)
+        new_job_uuid = good_job_uuid + str(i)
+        new_url = job_url_format.format(job_uuid=new_job_uuid)
         new_url += '/' + good_dataset_uuid
         response = requests.post(
             url=new_url,
@@ -137,8 +142,9 @@ def test_mass_post_and_delete(good_job_uuid, good_post_data, headers, \
         "DELETE failed!"
 
     for i in range(1,6):
-        response = requests.get(good_job_url + str(i))
         new_job_uuid = good_job_uuid + str(i)
+        new_url = job_url_format.format(job_uuid=new_job_uuid)
+        response = requests.get(new_url)
         response_dict = json.loads(response.text)
         assert 'status' in response_dict and response_dict['status'] == 'failure', \
             "GET should have failed!"
