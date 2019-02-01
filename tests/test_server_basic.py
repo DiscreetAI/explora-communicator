@@ -151,3 +151,4 @@ def test_mass_post_and_delete(good_job_uuid, good_post_data, headers, \
         assert 'message' in response_dict and \
             response_dict['message'] == "Job with UUID {} doesn't exist.".format(new_job_uuid), \
             "Error message was not correct!"
+

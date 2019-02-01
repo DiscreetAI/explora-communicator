@@ -74,7 +74,7 @@ class Job(Resource):
         """
         Get data for job with given job_uuid from jobs dictionary.
 
-        Return success status if job data were found, failure otherwise.
+        Return success status if job data was found, failure otherwise.
         """
         if job_uuid in jobs:
             return make_success_dict(job_uuid) 
@@ -102,7 +102,7 @@ class JobsList(Resource):
 
     def delete(self):
         """
-        Clear the entire datasets dictionary.
+        Clear the entire jobs dictionary.
 
         Return success status assuming entries were deleted.
         """
